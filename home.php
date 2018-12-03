@@ -1,4 +1,14 @@
-<?php require_once("auth.php"); ?>
+<?php 
+
+require_once("auth.php");
+require 'koneksi.php';
+
+$namabelakang = $_SESSION["user"]["namabelakang"];
+$namadepan = $_SESSION["user"]["namadepan"];
+$nama = $namabelakang . ' ' . $namadepan;
+
+
+?>
 
 <!DOCTYPE html>
 <html>
@@ -8,7 +18,7 @@
 <body>
 <h1>WELCOME!</h1>
 <div class="card-body text-center">
-	<h3><?php echo  $_SESSION["user"]["namabelakang"] ?><a> </a><?php echo  $_SESSION["user"]["namadepan"] ?></h3>
+	<h3><?php echo $namabelakang ?><a> </a><?php echo $namadepan ?></h3>
 	<p><?php echo $_SESSION["user"]["email"] ?></p>
 	<p><a href="logout.php">Logout</a></p>
 </div>
@@ -25,6 +35,7 @@ $result = mysqli_query($con, $sql);
  	<th>Penerbit</th>
  	<th>Tahun</th>
  	<th>Jenis</th>
+ 	<th>Kuantitas</th>
  	<th>Tindakan</th>
  </tr>
  	<?php while($product = mysqli_fetch_object($result)) { ?> 
@@ -35,7 +46,7 @@ $result = mysqli_query($con, $sql);
 		<td> <?php echo $product->tahun_terbit; ?> </td>
 		<td> <?php echo $product->jenis; ?> </td>
 		<td> <?php echo $product->quantity; ?> </td>
-		<td> <a href="home.php?id= <?php echo $product->id; ?> &action=add">Pinjam</a> </td>
+		<td> <a name='pinjam' href="home.php?id= <?php echo $product->id; ?> &action=add">Pinjam</a> </td>
 	</tr>
 	<?php } ?>
  </table>
@@ -92,7 +103,7 @@ if(isset($_POST['update'])) {
 }
 ?>
 <h2> Items in your cart: </h2> 
-<form method="POST">
+<form  action='' method="POST">
 <table id="t01">
 <tr>
 	<th>Option</th>
@@ -100,11 +111,14 @@ if(isset($_POST['update'])) {
 	<th>Nama Buku</th>
 	<th>Penerbit</th>
 </tr>
+
 <?php 
-     $cart = unserialize(serialize($_SESSION['cart']));
- 	 $s = 0;
- 	 $index = 0;
- 	for($i=0; $i<count($cart); $i++){
+  //  if (isset($_POST['pinjam'])) {
+     		# code...
+     	$cart = unserialize(serialize($_SESSION['cart']));
+ 	 	$s = 0;
+ 	 	$index = 0;
+ 		for($i=0; $i<count($cart); $i++){
  ?>	
    <tr>
     	<td><a href="home.php?index=<?php echo $index; ?>" onclick="return confirm('Are you sure?')" >Delete</a> </td>
@@ -116,15 +130,41 @@ if(isset($_POST['update'])) {
    </tr>
  	<?php 
 	 	$index++;
- 	} ?>
+ 	} 
+ //}?>
 </table>
+<input class="form-control" type="submit" name="pesan" style="background-color:rgb(147,147,147);" value="Pesan"></div>
 </form>
 <br>
-<a href="index.php">Continue Shopping</a> | <a href="checkout.php">Checkout</a>
+
+
 <?php 
 if(isset($_GET["id"]) || isset($_GET["index"])){
  header('Location: home.php');
 } 
+
+?>
+
+<?php  
+
+if (isset($_POST['pesan'])) {
+	# code...
+	$cart = unserialize(serialize($_SESSION['cart']));
+	for($i=0; $i<count($cart);$i++) {
+	$sql = "INSERT INTO pesanan (order_nama, id_buku, tanggal, status) VALUES ('$nama', '".$cart[$i]->id."', '".date('Y-m-d')."', '0')";
+	$query = mysqli_query($con, $sql);
+	if( $query ) {
+		// kalau berhasil alihkan ke halaman list-siswa.php
+		header('Location: sukses.php');
+	} else {
+		// kalau gagal tampilkan pesan
+		die("Gagal menyimpan perubahan...");
+	}
+
+	unset($_SESSION['cart']);
+	}
+}
+
 ?>
 </body>
 </html>
